@@ -583,12 +583,18 @@
     <!-- Main JavaScript -->
     <script>
         
-        const CONFIG = {
+const CONFIG = {
     API_BASE_URL: 'https://real-wealthy-1.onrender.com/api',
-    TOKEN_KEY: 'admin_token',
-    USER_KEY: 'admin_user',
-    VERSION: '35.0.0',
-    // ... other config
+    TOKEN_KEY: 'admin_auth_token',
+    USER_KEY: 'admin_user_data',
+    VERSION: '1.0.0',
+    ENVIRONMENT: window.location.hostname === 'localhost' ? 'development' : 'production',
+    MIN_INVESTMENT: 3500,
+    MIN_DEPOSIT: 500,
+    MIN_WITHDRAWAL: 1000,
+    PLATFORM_FEE_PERCENT: 5,
+    REFERRAL_COMMISSION_PERCENT: 15,
+    WELCOME_BONUS: 10000
 };
         // State Management
         const state = {
