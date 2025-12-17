@@ -1,0 +1,3368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raw Wealthy - Admin Dashboard</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- DataTables -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #10b981;
+            --danger-color: #dc2626;
+            --warning-color: #fbbf24;
+            --info-color: #3b82f6;
+            --dark-color: #1f2937;
+            --light-color: #f9fafb;
+            --sidebar-width: 260px;
+            --header-height: 70px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fb;
+            overflow-x: hidden;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            padding: 0;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar.collapsed {
+            width: 80px;
+        }
+        
+        .sidebar-header {
+            padding: 20px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .sidebar-header .logo {
+            font-size: 22px;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .sidebar-menu {
+            padding: 20px 0;
+            height: calc(100vh - 130px);
+            overflow-y: auto;
+        }
+        
+        .sidebar-menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .sidebar-menu li {
+            position: relative;
+        }
+        
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-left-color: white;
+        }
+        
+        .sidebar-menu a i {
+            font-size: 18px;
+            margin-right: 12px;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .sidebar-menu span {
+            white-space: nowrap;
+            transition: opacity 0.3s ease;
+        }
+        
+        .sidebar.collapsed .sidebar-menu span {
+            opacity: 0;
+            display: none;
+        }
+        
+        .sidebar-footer {
+            padding: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        /* Main Content Styles */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding-top: var(--header-height);
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar.collapsed ~ .main-content {
+            margin-left: 80px;
+        }
+        
+        .header {
+            position: fixed;
+            top: 0;
+            left: var(--sidebar-width);
+            right: 0;
+            height: var(--header-height);
+            background: white;
+            padding: 0 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 999;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar.collapsed ~ .main-content .header {
+            left: 80px;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .content-container {
+            padding: 25px;
+            min-height: calc(100vh - var(--header-height));
+        }
+        
+        /* Card Styles */
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+        
+        .stat-icon.users { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); }
+        .stat-icon.money { background: linear-gradient(135deg, var(--success-color), #0ea5e9); }
+        .stat-icon.investments { background: linear-gradient(135deg, var(--warning-color), #f59e0b); }
+        .stat-icon.revenue { background: linear-gradient(135deg, var(--danger-color), #ef4444); }
+        
+        /* Chart Container */
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            height: 400px;
+        }
+        
+        /* Table Styles */
+        .data-table-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        /* Status Badges */
+        .badge {
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .badge-pending { background-color: #fef3c7; color: #92400e; }
+        .badge-active { background-color: #d1fae5; color: #065f46; }
+        .badge-approved { background-color: #dbeafe; color: #1e40af; }
+        .badge-rejected { background-color: #fee2e2; color: #991b1b; }
+        .badge-completed { background-color: #f3e8ff; color: #5b21b6; }
+        
+        /* Action Buttons */
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .btn-approve { background-color: #d1fae5; color: #065f46; }
+        .btn-reject { background-color: #fee2e2; color: #991b1b; }
+        .btn-view { background-color: #dbeafe; color: #1e40af; }
+        .btn-edit { background-color: #fef3c7; color: #92400e; }
+        
+        /* Modal Styles */
+        .modal-lg-custom {
+            max-width: 900px;
+        }
+        
+        /* Image Preview */
+        .image-preview {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .image-preview:hover {
+            transform: scale(1.02);
+        }
+        
+        /* Loader */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 50px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .header {
+                left: 0;
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+        
+        /* Notification Badge */
+        .notification-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--danger-color);
+            color: white;
+            font-size: 10px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="#" class="logo">Raw Wealthy</a>
+            <button class="btn btn-sm btn-outline-light d-none d-lg-inline" id="sidebarToggle">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+        </div>
+        
+        <div class="sidebar-menu">
+            <ul>
+                <li>
+                    <a href="#" class="active" data-page="dashboard">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="users">
+                        <i class="bi bi-people"></i>
+                        <span>Users</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="investments">
+                        <i class="bi bi-graph-up"></i>
+                        <span>Investments</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="deposits">
+                        <i class="bi bi-cash-coin"></i>
+                        <span>Deposits</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="withdrawals">
+                        <i class="bi bi-wallet2"></i>
+                        <span>Withdrawals</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="transactions">
+                        <i class="bi bi-list-check"></i>
+                        <span>Transactions</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="kyc">
+                        <i class="bi bi-shield-check"></i>
+                        <span>KYC Verification</span>
+                        <span class="badge bg-danger notification-badge" id="kycBadge">0</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="support">
+                        <i class="bi bi-headset"></i>
+                        <span>Support Tickets</span>
+                        <span class="badge bg-danger notification-badge" id="supportBadge">0</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="plans">
+                        <i class="bi bi-journal-check"></i>
+                        <span>Investment Plans</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="notifications">
+                        <i class="bi bi-bell"></i>
+                        <span>Notifications</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="settings">
+                        <i class="bi bi-gear"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-page="reports">
+                        <i class="bi bi-bar-chart"></i>
+                        <span>Reports</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="d-flex align-items-center">
+                    <div class="avatar me-2">
+                        <div class="bg-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="bi bi-person text-primary"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-white fw-bold" id="adminName">Admin User</div>
+                        <small class="text-white-50">Super Admin</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-outline-secondary me-3 d-lg-none" id="mobileSidebarToggle">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h4 class="mb-0" id="pageTitle">Dashboard</h4>
+            </div>
+            
+            <div class="header-right">
+                <div class="dropdown">
+                    <button class="btn btn-light position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown">
+                        <i class="bi bi-bell"></i>
+                        <span class="badge bg-danger position-absolute top-0 start-100 translate-middle" id="notificationCount">0</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end p-0" style="width: 300px;">
+                        <div class="p-3 border-bottom">
+                            <h6 class="mb-0">Notifications</h6>
+                        </div>
+                        <div class="notification-list" id="notificationList" style="max-height: 300px; overflow-y: auto;">
+                            <!-- Notifications will be loaded here -->
+                        </div>
+                        <div class="p-2 border-top text-center">
+                            <a href="#" class="text-decoration-none" data-page="notifications">View All</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dropdown">
+                    <button class="btn btn-light d-flex align-items-center" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle me-2"></i>
+                        <span id="adminNameShort">Admin</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#" data-page="profile"><i class="bi bi-person me-2"></i>Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#" id="logoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Container -->
+        <div class="content-container" id="contentContainer">
+            <!-- Dashboard content will be loaded here -->
+            <div class="loader" id="mainLoader"></div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- User Detail Modal -->
+    <div class="modal fade" id="userDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-lg-custom">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">User Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="userDetailContent">
+                    <!-- User details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Image Preview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="" alt="Preview" id="previewImage" class="img-fluid">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approve/Reject Modal -->
+    <div class="modal fade" id="actionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="actionModalTitle">Action Required</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="remarks" class="form-label">Remarks</label>
+                        <textarea class="form-control" id="remarks" rows="3" placeholder="Enter remarks..."></textarea>
+                    </div>
+                    <div class="mb-3" id="transactionIdField" style="display: none;">
+                        <label for="transactionId" class="form-label">Transaction ID</label>
+                        <input type="text" class="form-control" id="transactionId" placeholder="Enter transaction ID">
+                    </div>
+                    <div class="mb-3" id="paymentProofField" style="display: none;">
+                        <label for="paymentProof" class="form-label">Payment Proof URL</label>
+                        <input type="text" class="form-control" id="paymentProof" placeholder="Enter payment proof URL">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="rejectBtn">Reject</button>
+                    <button type="button" class="btn btn-success" id="approveBtn">Approve</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Bootstrap Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- jQuery (for DataTables) -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    
+    <!-- DataTables -->
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    
+    <!-- Main JavaScript -->
+    <script>
+        // Configuration
+        const CONFIG = {
+            API_BASE_URL: window.location.origin, // Same server URL
+            TOKEN_KEY: 'raw_wealthy_admin_token',
+            USER_KEY: 'raw_wealthy_admin_user'
+        };
+
+        // State Management
+        const state = {
+            currentPage: 'dashboard',
+            adminUser: null,
+            notifications: [],
+            pendingCounts: {
+                kyc: 0,
+                support: 0,
+                investments: 0,
+                deposits: 0,
+                withdrawals: 0
+            },
+            currentAction: null,
+            currentItemId: null,
+            currentItemType: null
+        };
+
+        // Auth Management
+        class AuthManager {
+            constructor() {
+                this.token = localStorage.getItem(CONFIG.TOKEN_KEY);
+                this.user = JSON.parse(localStorage.getItem(CONFIG.USER_KEY) || 'null');
+                state.adminUser = this.user;
+            }
+
+            isAuthenticated() {
+                return this.token && this.user;
+            }
+
+            setAuth(token, user) {
+                this.token = token;
+                this.user = user;
+                state.adminUser = user;
+                localStorage.setItem(CONFIG.TOKEN_KEY, token);
+                localStorage.setItem(CONFIG.USER_KEY, JSON.stringify(user));
+            }
+
+            clearAuth() {
+                this.token = null;
+                this.user = null;
+                state.adminUser = null;
+                localStorage.removeItem(CONFIG.TOKEN_KEY);
+                localStorage.removeItem(CONFIG.USER_KEY);
+            }
+
+            getAuthHeaders() {
+                return {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                };
+            }
+        }
+
+        // API Service
+        class ApiService {
+            constructor(authManager) {
+                this.auth = authManager;
+            }
+
+            async request(endpoint, options = {}) {
+                const url = `${CONFIG.API_BASE_URL}${endpoint}`;
+                const headers = {
+                    ...this.auth.getAuthHeaders(),
+                    ...options.headers
+                };
+
+                try {
+                    const response = await fetch(url, {
+                        ...options,
+                        headers
+                    });
+
+                    if (response.status === 401) {
+                        // Unauthorized - redirect to login
+                        this.auth.clearAuth();
+                        window.location.href = '/admin/login.html';
+                        return null;
+                    }
+
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.message || 'API request failed');
+                    }
+
+                    return data;
+                } catch (error) {
+                    console.error('API Error:', error);
+                    showAlert('Error', error.message, 'danger');
+                    return null;
+                }
+            }
+
+            // Dashboard
+            async getDashboardStats() {
+                return this.request('/api/admin/dashboard');
+            }
+
+            // Users
+            async getUsers(params = {}) {
+                const query = new URLSearchParams(params).toString();
+                return this.request(`/api/admin/users?${query}`);
+            }
+
+            async getUserDetails(userId) {
+                return this.request(`/api/admin/users/${userId}`);
+            }
+
+            async updateUserStatus(userId, isActive) {
+                return this.request(`/api/admin/users/${userId}/status`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ is_active: isActive })
+                });
+            }
+
+            async updateUserRole(userId, role) {
+                return this.request(`/api/admin/users/${userId}/role`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ role })
+                });
+            }
+
+            async updateUserBalance(userId, amount, type, description, reference) {
+                return this.request(`/api/admin/users/${userId}/balance`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        amount,
+                        type,
+                        description,
+                        reference
+                    })
+                });
+            }
+
+            async verifyBankDetails(userId, verified, remarks) {
+                return this.request(`/api/admin/users/${userId}/verify-bank`, {
+                    method: 'POST',
+                    body: JSON.stringify({ verified, remarks })
+                });
+            }
+
+            // Investments
+            async getPendingInvestments() {
+                return this.request('/api/admin/pending-investments');
+            }
+
+            async approveInvestment(investmentId, remarks) {
+                return this.request(`/api/admin/investments/${investmentId}/approve`, {
+                    method: 'POST',
+                    body: JSON.stringify({ remarks })
+                });
+            }
+
+            async rejectInvestment(investmentId, remarks) {
+                return this.request(`/api/admin/investments/${investmentId}/reject`, {
+                    method: 'POST',
+                    body: JSON.stringify({ remarks })
+                });
+            }
+
+            // Deposits
+            async getPendingDeposits() {
+                return this.request('/api/admin/pending-deposits');
+            }
+
+            async approveDeposit(depositId, remarks) {
+                return this.request(`/api/admin/deposits/${depositId}/approve`, {
+                    method: 'POST',
+                    body: JSON.stringify({ remarks })
+                });
+            }
+
+            async rejectDeposit(depositId, remarks) {
+                return this.request(`/api/admin/deposits/${depositId}/reject`, {
+                    method: 'POST',
+                    body: JSON.stringify({ remarks })
+                });
+            }
+
+            // Withdrawals
+            async getPendingWithdrawals() {
+                return this.request('/api/admin/pending-withdrawals');
+            }
+
+            async approveWithdrawal(withdrawalId, remarks, transactionId, paymentProofUrl) {
+                return this.request(`/api/admin/withdrawals/${withdrawalId}/approve`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        remarks,
+                        transaction_id: transactionId,
+                        payment_proof_url: paymentProofUrl
+                    })
+                });
+            }
+
+            async rejectWithdrawal(withdrawalId, remarks) {
+                return this.request(`/api/admin/withdrawals/${withdrawalId}/reject`, {
+                    method: 'POST',
+                    body: JSON.stringify({ remarks })
+                });
+            }
+
+            // Transactions
+            async getTransactions(params = {}) {
+                const query = new URLSearchParams(params).toString();
+                return this.request(`/api/admin/transactions?${query}`);
+            }
+
+            // KYC
+            async getPendingKYC() {
+                return this.request('/api/admin/pending-kyc');
+            }
+
+            async approveKYC(kycId, remarks) {
+                return this.request(`/api/admin/kyc/${kycId}/approve`, {
+                    method: 'POST',
+                    body: JSON.stringify({ remarks })
+                });
+            }
+
+            async rejectKYC(kycId, rejectionReason, remarks) {
+                return this.request(`/api/admin/kyc/${kycId}/reject`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        rejection_reason: rejectionReason,
+                        remarks
+                    })
+                });
+            }
+
+            // Support Tickets
+            async getSupportTickets() {
+                return this.request('/api/support/tickets');
+            }
+
+            // Notifications
+            async getNotifications() {
+                return this.request('/api/notifications');
+            }
+
+            async markNotificationAsRead(notificationId) {
+                return this.request(`/api/notifications/${notificationId}/read`, {
+                    method: 'POST'
+                });
+            }
+
+            async sendNotification(userId, title, message, type, actionUrl) {
+                return this.request('/api/admin/notifications/send', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        user_id: userId,
+                        title,
+                        message,
+                        type,
+                        action_url: actionUrl
+                    })
+                });
+            }
+
+            // Investment Plans
+            async getInvestmentPlans() {
+                return this.request('/api/plans');
+            }
+        }
+
+        // UI Components
+        class UIComponents {
+            static showAlert(title, message, type = 'info') {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+                alertDiv.innerHTML = `
+                    <strong>${title}</strong> ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                const container = document.getElementById('contentContainer');
+                container.insertBefore(alertDiv, container.firstChild);
+                
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 5000);
+            }
+
+            static formatDate(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+
+            static formatCurrency(amount) {
+                return new Intl.NumberFormat('en-NG', {
+                    style: 'currency',
+                    currency: 'NGN'
+                }).format(amount);
+            }
+
+            static getStatusBadge(status) {
+                const badges = {
+                    'pending': '<span class="badge badge-pending">Pending</span>',
+                    'active': '<span class="badge badge-active">Active</span>',
+                    'approved': '<span class="badge badge-approved">Approved</span>',
+                    'rejected': '<span class="badge badge-rejected">Rejected</span>',
+                    'completed': '<span class="badge badge-completed">Completed</span>',
+                    'paid': '<span class="badge badge-active">Paid</span>',
+                    'verified': '<span class="badge badge-active">Verified</span>',
+                    'open': '<span class="badge badge-pending">Open</span>',
+                    'in_progress': '<span class="badge badge-approved">In Progress</span>',
+                    'resolved': '<span class="badge badge-completed">Resolved</span>',
+                    'closed': '<span class="badge badge-rejected">Closed</span>'
+                };
+                return badges[status] || '<span class="badge badge-secondary">' + status + '</span>';
+            }
+
+            static showLoader() {
+                document.getElementById('contentContainer').innerHTML = `
+                    <div class="loader"></div>
+                `;
+            }
+
+            static hideLoader() {
+                const loader = document.querySelector('.loader');
+                if (loader) loader.remove();
+            }
+        }
+
+        // Page Manager
+        class PageManager {
+            constructor(apiService) {
+                this.api = apiService;
+                this.currentPage = 'dashboard';
+                this.init();
+            }
+
+            init() {
+                // Navigation
+                document.querySelectorAll('.sidebar-menu a[data-page]').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const page = e.target.closest('a').dataset.page;
+                        this.navigateTo(page);
+                    });
+                });
+
+                // Sidebar toggle
+                document.getElementById('sidebarToggle').addEventListener('click', () => {
+                    document.getElementById('sidebar').classList.toggle('collapsed');
+                });
+
+                // Mobile sidebar toggle
+                document.getElementById('mobileSidebarToggle').addEventListener('click', () => {
+                    document.getElementById('sidebar').classList.toggle('show');
+                });
+
+                // Logout
+                document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (confirm('Are you sure you want to logout?')) {
+                        auth.clearAuth();
+                        window.location.href = '/admin/login.html';
+                    }
+                });
+
+                // Action modal buttons
+                document.getElementById('approveBtn').addEventListener('click', () => this.handleApprove());
+                document.getElementById('rejectBtn').addEventListener('click', () => this.handleReject());
+
+                // Image preview
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('image-preview')) {
+                        document.getElementById('previewImage').src = e.target.src;
+                        new bootstrap.Modal(document.getElementById('imagePreviewModal')).show();
+                    }
+                });
+
+                // Initial load
+                this.navigateTo('dashboard');
+                this.loadPendingCounts();
+                this.loadNotifications();
+                this.updateAdminInfo();
+            }
+
+            navigateTo(page) {
+                // Update active link
+                document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                    link.classList.remove('active');
+                });
+                document.querySelector(`.sidebar-menu a[data-page="${page}"]`).classList.add('active');
+
+                // Update page title
+                document.getElementById('pageTitle').textContent = this.getPageTitle(page);
+                
+                // Update current page
+                this.currentPage = page;
+                state.currentPage = page;
+
+                // Load page content
+                this.loadPage(page);
+            }
+
+            getPageTitle(page) {
+                const titles = {
+                    'dashboard': 'Dashboard',
+                    'users': 'Users Management',
+                    'investments': 'Investments',
+                    'deposits': 'Deposits',
+                    'withdrawals': 'Withdrawals',
+                    'transactions': 'Transactions',
+                    'kyc': 'KYC Verification',
+                    'support': 'Support Tickets',
+                    'plans': 'Investment Plans',
+                    'notifications': 'Notifications',
+                    'settings': 'Settings',
+                    'reports': 'Reports',
+                    'profile': 'Admin Profile'
+                };
+                return titles[page] || 'Admin Dashboard';
+            }
+
+            async loadPage(page) {
+                UIComponents.showLoader();
+                
+                try {
+                    switch(page) {
+                        case 'dashboard':
+                            await this.loadDashboard();
+                            break;
+                        case 'users':
+                            await this.loadUsers();
+                            break;
+                        case 'investments':
+                            await this.loadInvestments();
+                            break;
+                        case 'deposits':
+                            await this.loadDeposits();
+                            break;
+                        case 'withdrawals':
+                            await this.loadWithdrawals();
+                            break;
+                        case 'transactions':
+                            await this.loadTransactions();
+                            break;
+                        case 'kyc':
+                            await this.loadKYC();
+                            break;
+                        case 'support':
+                            await this.loadSupportTickets();
+                            break;
+                        case 'plans':
+                            await this.loadInvestmentPlans();
+                            break;
+                        case 'notifications':
+                            await this.loadAllNotifications();
+                            break;
+                        case 'settings':
+                            await this.loadSettings();
+                            break;
+                        case 'reports':
+                            await this.loadReports();
+                            break;
+                        case 'profile':
+                            await this.loadProfile();
+                            break;
+                    }
+                } catch (error) {
+                    console.error('Error loading page:', error);
+                    UIComponents.showAlert('Error', 'Failed to load page content', 'danger');
+                }
+            }
+
+            async loadDashboard() {
+                const data = await this.api.getDashboardStats();
+                if (!data) return;
+
+                const stats = data.data.stats;
+                
+                // Update pending counts
+                state.pendingCounts.investments = stats.pending_actions.pending_investments;
+                state.pendingCounts.deposits = stats.pending_actions.pending_deposits;
+                state.pendingCounts.withdrawals = stats.pending_actions.pending_withdrawals;
+                state.pendingCounts.kyc = stats.pending_actions.pending_kyc;
+                
+                this.updatePendingBadges();
+                
+                const html = `
+                    <div class="row fade-in">
+                        <div class="col-12 mb-4">
+                            <h4 class="mb-0">Dashboard Overview</h4>
+                            <p class="text-muted">Real-time platform statistics and analytics</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Stats Cards -->
+                    <div class="row mb-4">
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-muted mb-2">Total Users</h6>
+                                        <h3 class="mb-0">${stats.overview.total_users}</h3>
+                                        <small class="text-success">
+                                            <i class="bi bi-arrow-up"></i> ${stats.overview.new_users_today} today
+                                        </small>
+                                    </div>
+                                    <div class="stat-icon users">
+                                        <i class="bi bi-people"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-muted mb-2">Total Revenue</h6>
+                                        <h3 class="mb-0">${UIComponents.formatCurrency(stats.overview.platform_revenue)}</h3>
+                                        <small class="text-success">
+                                            <i class="bi bi-arrow-up"></i> ${UIComponents.formatCurrency(stats.period_stats.weekly.deposits)} this week
+                                        </small>
+                                    </div>
+                                    <div class="stat-icon money">
+                                        <i class="bi bi-cash-stack"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-muted mb-2">Active Investments</h6>
+                                        <h3 class="mb-0">${stats.overview.active_investments}</h3>
+                                        <small class="text-success">
+                                            <i class="bi bi-arrow-up"></i> ${stats.period_stats.weekly.investments_count} this week
+                                        </small>
+                                    </div>
+                                    <div class="stat-icon investments">
+                                        <i class="bi bi-graph-up"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="text-muted mb-2">Total Earnings</h6>
+                                        <h3 class="mb-0">${UIComponents.formatCurrency(stats.overview.total_earnings)}</h3>
+                                        <small class="text-success">
+                                            <i class="bi bi-arrow-up"></i> ${UIComponents.formatCurrency(stats.overview.total_daily_earnings)} daily
+                                        </small>
+                                    </div>
+                                    <div class="stat-icon revenue">
+                                        <i class="bi bi-currency-exchange"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Charts and Quick Actions -->
+                    <div class="row">
+                        <!-- Chart -->
+                        <div class="col-xl-8 mb-4">
+                            <div class="chart-container">
+                                <h6 class="mb-3">Revenue Overview</h6>
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Actions -->
+                        <div class="col-xl-4 mb-4">
+                            <div class="data-table-container h-100">
+                                <h6 class="mb-3">Quick Actions</h6>
+                                <div class="list-group">
+                                    <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-page="investments">
+                                        Pending Investments
+                                        <span class="badge bg-warning">${stats.pending_actions.pending_investments}</span>
+                                    </a>
+                                    <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-page="deposits">
+                                        Pending Deposits
+                                        <span class="badge bg-warning">${stats.pending_actions.pending_deposits}</span>
+                                    </a>
+                                    <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-page="withdrawals">
+                                        Pending Withdrawals
+                                        <span class="badge bg-warning">${stats.pending_actions.pending_withdrawals}</span>
+                                    </a>
+                                    <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-page="kyc">
+                                        Pending KYC
+                                        <span class="badge bg-warning">${stats.pending_actions.pending_kyc}</span>
+                                    </a>
+                                    <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-page="users">
+                                        View All Users
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                    <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-page="transactions">
+                                        Recent Transactions
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Activity -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="data-table-container">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="mb-0">Recent Transactions</h6>
+                                    <a href="#" class="btn btn-sm btn-primary" data-page="transactions">View All</a>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="recentTransactions">
+                                        <thead>
+                                            <tr>
+                                                <th>User</th>
+                                                <th>Type</th>
+                                                <th>Amount</th>
+                                                <th>Description</th>
+                                                <th>Date</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${stats.recent_activity.transactions.slice(0, 5).map(txn => `
+                                                <tr>
+                                                    <td>${txn.user?.full_name || 'N/A'}</td>
+                                                    <td>${txn.type}</td>
+                                                    <td>${UIComponents.formatCurrency(txn.amount)}</td>
+                                                    <td>${txn.description}</td>
+                                                    <td>${UIComponents.formatDate(txn.createdAt)}</td>
+                                                    <td>${UIComponents.getStatusBadge(txn.status)}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('contentContainer').innerHTML = html;
+                
+                // Initialize chart
+                this.initRevenueChart(stats);
+                
+                // Add event listeners for quick actions
+                document.querySelectorAll('.list-group-item[data-page]').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.navigateTo(e.target.closest('a').dataset.page);
+                    });
+                });
+            }
+
+            initRevenueChart(stats) {
+                const ctx = document.getElementById('revenueChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [{
+                            label: 'Revenue',
+                            data: [650000, 590000, 800000, 810000, 560000, 550000, 400000],
+                            borderColor: 'rgb(102, 126, 234)',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '₦' + (value / 1000).toFixed(0) + 'K';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            async loadUsers() {
+                const data = await this.api.getUsers();
+                if (!data) return;
+
+                const html = `
+                    <div class="row fade-in">
+                        <div class="col-12 mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 class="mb-0">Users Management</h4>
+                                    <p class="text-muted">Manage all platform users</p>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-primary" id="refreshUsers">
+                                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                                    </button>
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            <i class="bi bi-filter"></i> Filter
+                                        </button>
+                                        <div class="dropdown-menu p-3" style="width: 300px;">
+                                            <div class="mb-3">
+                                                <label class="form-label">Status</label>
+                                                <select class="form-select" id="filterStatus">
+                                                    <option value="">All</option>
+                                                    <option value="active">Active</option>
+                                                    <option value="inactive">Inactive</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Role</label>
+                                                <select class="form-select" id="filterRole">
+                                                    <option value="">All</option>
+                                                    <option value="user">User</option>
+                                                    <option value="admin">Admin</option>
+                                                    <option value="super_admin">Super Admin</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">KYC Status</label>
+                                                <select class="form-select" id="filterKYC">
+                                                    <option value="">All</option>
+                                                    <option value="verified">Verified</option>
+                                                    <option value="pending">Pending</option>
+                                                    <option value="rejected">Rejected</option>
+                                                </select>
+                                            </div>
+                                            <button class="btn btn-primary w-100" id="applyFilters">Apply</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="data-table-container">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="usersTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Email</th>
+                                                <th>Phone</th>
+                                                <th>Balance</th>
+                                                <th>Role</th>
+                                                <th>KYC Status</th>
+                                                <th>Status</th>
+                                                <th>Joined</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${data.data.users.map(user => `
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="avatar me-2">
+                                                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                                    <i class="bi bi-person text-primary"></i>
+                                                                </div>
+                                                            </div>
+                                                            <div>
+                                                                <div class="fw-bold">${user.full_name}</div>
+                                                                <small class="text-muted">Ref: ${user.referral_code}</small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>${user.email}</td>
+                                                    <td>${user.phone}</td>
+                                                    <td>${UIComponents.formatCurrency(user.balance)}</td>
+                                                    <td>
+                                                        <select class="form-select form-select-sm role-select" data-user-id="${user._id}" style="width: 120px;">
+                                                            <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
+                                                            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                                                            <option value="super_admin" ${user.role === 'super_admin' ? 'selected' : ''}>Super Admin</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>${UIComponents.getStatusBadge(user.kyc_status)}</td>
+                                                    <td>
+                                                        <div class="form-check form-switch">
+                                                            <input class="form-check-input status-toggle" type="checkbox" data-user-id="${user._id}" ${user.is_active ? 'checked' : ''}>
+                                                        </div>
+                                                    </td>
+                                                    <td>${UIComponents.formatDate(user.createdAt)}</td>
+                                                    <td>
+                                                        <div class="d-flex gap-1">
+                                                            <button class="btn btn-sm btn-view action-btn" data-user-id="${user._id}" title="View Details">
+                                                                <i class="bi bi-eye"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-edit action-btn" data-user-id="${user._id}" title="Edit Balance">
+                                                                <i class="bi bi-cash-coin"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm ${user.bank_details?.verified ? 'btn-approve' : 'btn-view'} action-btn" data-user-id="${user._id}" data-bank-verified="${user.bank_details?.verified || 'false'}" title="${user.bank_details?.verified ? 'Bank Verified' : 'Verify Bank'}">
+                                                                <i class="bi ${user.bank_details?.verified ? 'bi-check-circle' : 'bi-bank'}"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('contentContainer').innerHTML = html;
+                
+                // Initialize DataTable
+                $('#usersTable').DataTable({
+                    pageLength: 25,
+                    order: [[7, 'desc']]
+                });
+                
+                // Add event listeners
+                document.getElementById('refreshUsers').addEventListener('click', () => this.loadUsers());
+                document.getElementById('applyFilters').addEventListener('click', () => this.applyUserFilters());
+                
+                document.querySelectorAll('.role-select').forEach(select => {
+                    select.addEventListener('change', (e) => {
+                        const userId = e.target.dataset.userId;
+                        const role = e.target.value;
+                        this.updateUserRole(userId, role);
+                    });
+                });
+                
+                document.querySelectorAll('.status-toggle').forEach(toggle => {
+                    toggle.addEventListener('change', (e) => {
+                        const userId = e.target.dataset.userId;
+                        const isActive = e.target.checked;
+                        this.updateUserStatus(userId, isActive);
+                    });
+                });
+                
+                document.querySelectorAll('.btn-view[data-user-id]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const userId = e.target.closest('button').dataset.userId;
+                        this.showUserDetails(userId);
+                    });
+                });
+                
+                document.querySelectorAll('.btn-edit[data-user-id]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const userId = e.target.closest('button').dataset.userId;
+                        this.showBalanceModal(userId);
+                    });
+                });
+                
+                document.querySelectorAll('.btn-approve[data-user-id]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const userId = e.target.closest('button').dataset.userId;
+                        const verified = e.target.closest('button').dataset.bankVerified === 'true';
+                        this.showBankVerificationModal(userId, verified);
+                    });
+                });
+            }
+
+            async applyUserFilters() {
+                const status = document.getElementById('filterStatus').value;
+                const role = document.getElementById('filterRole').value;
+                const kyc = document.getElementById('filterKYC').value;
+                
+                const params = {};
+                if (status) params.status = status;
+                if (role) params.role = role;
+                if (kyc) params.kyc_status = kyc;
+                
+                const data = await this.api.getUsers(params);
+                // Update table with filtered data
+                // (In a real app, you would re-render the table with filtered data)
+            }
+
+            async updateUserRole(userId, role) {
+                if (confirm(`Are you sure you want to change this user's role to ${role}?`)) {
+                    const result = await this.api.updateUserRole(userId, role);
+                    if (result) {
+                        UIComponents.showAlert('Success', 'User role updated successfully', 'success');
+                    }
+                }
+            }
+
+            async updateUserStatus(userId, isActive) {
+                const result = await this.api.updateUserStatus(userId, isActive);
+                if (result) {
+                    UIComponents.showAlert('Success', `User ${isActive ? 'activated' : 'deactivated'} successfully`, 'success');
+                }
+            }
+
+            async showUserDetails(userId) {
+                const data = await this.api.getUserDetails(userId);
+                if (!data) return;
+
+                const user = data.data.user;
+                const stats = data.data.statistics;
+                
+                const html = `
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card mb-4">
+                                <div class="card-body text-center">
+                                    <div class="avatar mb-3">
+                                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 80px; height: 80px;">
+                                            <i class="bi bi-person text-white fs-3"></i>
+                                        </div>
+                                    </div>
+                                    <h5 class="card-title">${user.full_name}</h5>
+                                    <p class="text-muted">${user.email}</p>
+                                    <div class="d-flex justify-content-center gap-2 mb-3">
+                                        ${UIComponents.getStatusBadge(user.kyc_status)}
+                                        <span class="badge ${user.is_active ? 'bg-success' : 'bg-danger'}">
+                                            ${user.is_active ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <h6 class="card-title mb-3">Quick Stats</h6>
+                                    <div class="list-group list-group-flush">
+                                        <div class="list-group-item d-flex justify-content-between">
+                                            <span>Balance</span>
+                                            <span class="fw-bold">${UIComponents.formatCurrency(user.balance)}</span>
+                                        </div>
+                                        <div class="list-group-item d-flex justify-content-between">
+                                            <span>Total Earnings</span>
+                                            <span class="fw-bold">${UIComponents.formatCurrency(stats.total_earned)}</span>
+                                        </div>
+                                        <div class="list-group-item d-flex justify-content-between">
+                                            <span>Daily Interest</span>
+                                            <span class="fw-bold">${UIComponents.formatCurrency(stats.daily_interest)}</span>
+                                        </div>
+                                        <div class="list-group-item d-flex justify-content-between">
+                                            <span>Referral Earnings</span>
+                                            <span class="fw-bold">${UIComponents.formatCurrency(user.referral_earnings || 0)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <h6 class="card-title mb-3">User Information</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Full Name</label>
+                                            <input type="text" class="form-control" value="${user.full_name}" readonly>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Email</label>
+                                            <input type="text" class="form-control" value="${user.email}" readonly>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Phone</label>
+                                            <input type="text" class="form-control" value="${user.phone}" readonly>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Country</label>
+                                            <input type="text" class="form-control" value="${user.country}" readonly>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Referral Code</label>
+                                            <input type="text" class="form-control" value="${user.referral_code}" readonly>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Referred By</label>
+                                            <input type="text" class="form-control" value="${user.referred_by?.full_name || 'None'}" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title mb-3">Bank Details</h6>
+                                    ${user.bank_details ? `
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Bank Name</label>
+                                                <input type="text" class="form-control" value="${user.bank_details.bank_name}" readonly>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Account Name</label>
+                                                <input type="text" class="form-control" value="${user.bank_details.account_name}" readonly>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Account Number</label>
+                                                <input type="text" class="form-control" value="${user.bank_details.account_number}" readonly>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Verification Status</label>
+                                                <div class="d-flex align-items-center">
+                                                    ${UIComponents.getStatusBadge(user.bank_details.verified ? 'verified' : 'pending')}
+                                                    <span class="ms-2 text-muted">
+                                                        ${user.bank_details.verified ? `Verified on ${UIComponents.formatDate(user.bank_details.verified_at)}` : 'Not Verified'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ` : '<p class="text-muted">No bank details provided</p>'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title mb-3">Investment Summary</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Total Investments</th>
+                                                    <th>Active Investments</th>
+                                                    <th>Total Invested</th>
+                                                    <th>Total Earned</th>
+                                                    <th>Success Rate</th>
+                                                    <th>Portfolio Value</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>${stats.total_investments}</td>
+                                                    <td>${stats.active_investments}</td>
+                                                    <td>${UIComponents.formatCurrency(stats.total_invested)}</td>
+                                                    <td>${UIComponents.formatCurrency(stats.total_earned)}</td>
+                                                    <td>${stats.success_rate.toFixed(1)}%</td>
+                                                    <td>${UIComponents.formatCurrency(stats.portfolio_value)}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('userDetailContent').innerHTML = html;
+                new bootstrap.Modal(document.getElementById('userDetailModal')).show();
+            }
+
+            showBalanceModal(userId) {
+                const html = `
+                    <div class="mb-3">
+                        <label class="form-label">Adjustment Type</label>
+                        <select class="form-select" id="adjustmentType">
+                            <option value="add">Add Balance</option>
+                            <option value="subtract">Subtract Balance</option>
+                            <option value="set">Set Balance</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Amount</label>
+                        <input type="number" class="form-control" id="adjustmentAmount" placeholder="Enter amount">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <input type="text" class="form-control" id="adjustmentDescription" placeholder="Enter description">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reference (Optional)</label>
+                        <input type="text" class="form-control" id="adjustmentReference" placeholder="Enter reference">
+                    </div>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        This action will directly affect user's balance. Please double-check before proceeding.
+                    </div>
+                `;
+                
+                document.getElementById('userDetailContent').innerHTML = html;
+                const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
+                modal.show();
+                
+                // Set custom modal title and add action buttons
+                document.querySelector('#userDetailModal .modal-title').textContent = 'Adjust User Balance';
+                const modalFooter = document.querySelector('#userDetailModal .modal-footer');
+                modalFooter.innerHTML = `
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveBalance">Save Changes</button>
+                `;
+                
+                document.getElementById('saveBalance').addEventListener('click', async () => {
+                    const type = document.getElementById('adjustmentType').value;
+                    const amount = parseFloat(document.getElementById('adjustmentAmount').value);
+                    const description = document.getElementById('adjustmentDescription').value;
+                    const reference = document.getElementById('adjustmentReference').value;
+                    
+                    if (!amount || amount <= 0) {
+                        alert('Please enter a valid amount');
+                        return;
+                    }
+                    
+                    if (confirm(`Are you sure you want to ${type} ${UIComponents.formatCurrency(amount)} to this user's balance?`)) {
+                        const result = await this.api.updateUserBalance(userId, amount, type, description, reference);
+                        if (result) {
+                            UIComponents.showAlert('Success', 'Balance updated successfully', 'success');
+                            modal.hide();
+                            this.loadUsers(); // Refresh user list
+                        }
+                    }
+                });
+            }
+
+            showBankVerificationModal(userId, currentlyVerified) {
+                const html = `
+                    <div class="mb-3">
+                        <label class="form-label">Verification Action</label>
+                        <select class="form-select" id="verificationAction">
+                            <option value="verify" ${!currentlyVerified ? 'selected' : ''}>Verify Bank Details</option>
+                            <option value="unverify" ${currentlyVerified ? 'selected' : ''}>Remove Verification</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Remarks</label>
+                        <textarea class="form-control" id="verificationRemarks" rows="3" placeholder="Enter remarks..."></textarea>
+                    </div>
+                    <div class="alert ${currentlyVerified ? 'alert-warning' : 'alert-info'}">
+                        <i class="bi ${currentlyVerified ? 'bi-exclamation-triangle' : 'bi-info-circle'}"></i>
+                        ${currentlyVerified ? 'Removing verification will prevent the user from making withdrawals.' : 'Verifying bank details will allow the user to make withdrawals.'}
+                    </div>
+                `;
+                
+                document.getElementById('userDetailContent').innerHTML = html;
+                const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
+                modal.show();
+                
+                document.querySelector('#userDetailModal .modal-title').textContent = 'Bank Verification';
+                const modalFooter = document.querySelector('#userDetailModal .modal-footer');
+                modalFooter.innerHTML = `
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveVerification">Save Changes</button>
+                `;
+                
+                document.getElementById('saveVerification').addEventListener('click', async () => {
+                    const action = document.getElementById('verificationAction').value;
+                    const remarks = document.getElementById('verificationRemarks').value;
+                    const verified = action === 'verify';
+                    
+                    const result = await this.api.verifyBankDetails(userId, verified, remarks);
+                    if (result) {
+                        UIComponents.showAlert('Success', `Bank details ${verified ? 'verified' : 'verification removed'} successfully`, 'success');
+                        modal.hide();
+                        this.loadUsers(); // Refresh user list
+                    }
+                });
+            }
+
+            async loadInvestments() {
+                const data = await this.api.getPendingInvestments();
+                if (!data) return;
+
+                const html = `
+                    <div class="row fade-in">
+                        <div class="col-12 mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 class="mb-0">Pending Investments</h4>
+                                    <p class="text-muted">Approve or reject investment requests</p>
+                                </div>
+                                <button class="btn btn-primary" id="refreshInvestments">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="data-table-container">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="investmentsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>User</th>
+                                                <th>Plan</th>
+                                                <th>Amount</th>
+                                                <th>Proof</th>
+                                                <th>Date</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${data.data.investments.map(inv => `
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold">${inv.user_details.name}</div>
+                                                        <small class="text-muted">${inv.user_details.email}</small>
+                                                    </td>
+                                                    <td>
+                                                        <div class="fw-bold">${inv.plan?.name || 'N/A'}</div>
+                                                        <small class="text-muted">Daily: ${inv.plan?.daily_interest || 0}%</small>
+                                                    </td>
+                                                    <td>
+                                                        <div class="fw-bold">${UIComponents.formatCurrency(inv.amount)}</div>
+                                                        <small class="text-muted">Min: ${UIComponents.formatCurrency(inv.plan?.min_amount || 0)}</small>
+                                                    </td>
+                                                    <td>
+                                                        ${inv.has_proof ? `
+                                                            <button class="btn btn-sm btn-outline-primary" onclick="window.open('${inv.proof_url}', '_blank')">
+                                                                <i class="bi bi-eye"></i> View
+                                                            </button>
+                                                        ` : '<span class="text-muted">No proof</span>'}
+                                                    </td>
+                                                    <td>${UIComponents.formatDate(inv.createdAt)}</td>
+                                                    <td>
+                                                        <div class="d-flex gap-1">
+                                                            <button class="btn btn-sm btn-approve action-btn" data-id="${inv._id}" data-type="investment">
+                                                                <i class="bi bi-check"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-reject action-btn" data-id="${inv._id}" data-type="investment">
+                                                                <i class="bi bi-x"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-view action-btn" onclick="window.open('${inv.proof_url}', '_blank')" ${!inv.has_proof ? 'disabled' : ''}>
+                                                                <i class="bi bi-eye"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${data.data.count === 0 ? `
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="text-center py-5">
+                                    <i class="bi bi-check-circle text-success fs-1"></i>
+                                    <h5 class="mt-3">No pending investments</h5>
+                                    <p class="text-muted">All investments have been processed</p>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+                
+                document.getElementById('contentContainer').innerHTML = html;
+                
+                // Initialize DataTable
+                $('#investmentsTable').DataTable({
+                    pageLength: 25,
+                    order: [[4, 'desc']]
+                });
+                
+                // Add event listeners
+                document.getElementById('refreshInvestments').addEventListener('click', () => this.loadInvestments());
+                
+                document.querySelectorAll('.btn-approve[data-type="investment"]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = e.target.closest('button').dataset.id;
+                        this.showActionModal(id, 'investment', 'approve');
+                    });
+                });
+                
+                document.querySelectorAll('.btn-reject[data-type="investment"]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = e.target.closest('button').dataset.id;
+                        this.showActionModal(id, 'investment', 'reject');
+                    });
+                });
+            }
+
+            async loadDeposits() {
+                const data = await this.api.getPendingDeposits();
+                if (!data) return;
+
+                const html = `
+                    <div class="row fade-in">
+                        <div class="col-12 mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 class="mb-0">Pending Deposits</h4>
+                                    <p class="text-muted">Approve or reject deposit requests</p>
+                                </div>
+                                <button class="btn btn-primary" id="refreshDeposits">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="data-table-container">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="depositsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>User</th>
+                                                <th>Amount</th>
+                                                <th>Method</th>
+                                                <th>Proof</th>
+                                                <th>Reference</th>
+                                                <th>Date</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${data.data.deposits.map(dep => `
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold">${dep.user_details.name}</div>
+                                                        <small class="text-muted">${dep.user_details.email}</small>
+                                                    </td>
+                                                    <td>
+                                                        <div class="fw-bold">${UIComponents.formatCurrency(dep.amount)}</div>
+                                                        <small class="text-muted">Balance: ${UIComponents.formatCurrency(dep.user_details.current_balance)}</small>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-info">${dep.payment_method}</span>
+                                                    </td>
+                                                    <td>
+                                                        ${dep.has_proof ? `
+                                                            <button class="btn btn-sm btn-outline-primary" onclick="window.open('${dep.proof_url}', '_blank')">
+                                                                <i class="bi bi-eye"></i> View
+                                                            </button>
+                                                        ` : '<span class="text-muted">No proof</span>'}
+                                                    </td>
+                                                    <td>
+                                                        <code>${dep.reference}</code>
+                                                    </td>
+                                                    <td>
+                                                        ${UIComponents.formatDate(dep.createdAt)}
+                                                        <br>
+                                                        <small class="text-muted">${dep.days_pending} days pending</small>
+                                                    </td>
+                                                    <td>
+                                                        <div class="d-flex gap-1">
+                                                            <button class="btn btn-sm btn-approve action-btn" data-id="${dep._id}" data-type="deposit">
+                                                                <i class="bi bi-check"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-reject action-btn" data-id="${dep._id}" data-type="deposit">
+                                                                <i class="bi bi-x"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-view action-btn" onclick="window.open('${dep.proof_url}', '_blank')" ${!dep.has_proof ? 'disabled' : ''}>
+                                                                <i class="bi bi-eye"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${data.data.count === 0 ? `
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="text-center py-5">
+                                    <i class="bi bi-check-circle text-success fs-1"></i>
+                                    <h5 class="mt-3">No pending deposits</h5>
+                                    <p class="text-muted">All deposits have been processed</p>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+                
+                document.getElementById('contentContainer').innerHTML = html;
+                
+                // Initialize DataTable
+                $('#depositsTable').DataTable({
+                    pageLength: 25,
+                    order: [[5, 'desc']]
+                });
+                
+                // Add event listeners
+                document.getElementById('refreshDeposits').addEventListener('click', () => this.loadDeposits());
+                
+                document.querySelectorAll('.btn-approve[data-type="deposit"]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = e.target.closest('button').dataset.id;
+                        this.showActionModal(id, 'deposit', 'approve');
+                    });
+                });
+                
+                document.querySelectorAll('.btn-reject[data-type="deposit"]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = e.target.closest('button').dataset.id;
+                        this.showActionModal(id, 'deposit', 'reject');
+                    });
+                });
+            }
+
+            async loadWithdrawals() {
+                const data = await this.api.getPendingWithdrawals();
+                if (!data) return;
+
+                const html = `
+                    <div class="row fade-in">
+                        <div class="col-12 mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 class="mb-0">Pending Withdrawals</h4>
+                                    <p class="text-muted">Process withdrawal requests</p>
+                                </div>
+                                <button class="btn btn-primary" id="refreshWithdrawals">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="data-table-container">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="withdrawalsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>User</th>
+                                                <th>Amount</th>
+                                                <th>Method</th>
+                                                <th>Payment Details</th>
+                                                <th>Reference</th>
+                                                <th>Date</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${data.data.withdrawals.map(wdl => `
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold">${wdl.user_details.name}</div>
+                                                        <small class="text-muted">${wdl.user_details.email}</small>
+                                                    </td>
+                                                    <td>
+                                                        <div class="fw-bold">${UIComponents.formatCurrency(wdl.amount)}</div>
+                                                        <div class="small text-muted">
+                                                            Net: ${UIComponents.formatCurrency(wdl.net_amount)}<br>
+                                                            Fee: ${UIComponents.formatCurrency(wdl.platform_fee)}
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-info">${wdl.payment_method}</span>
+                                                    </td>
+                                                    <td>
+                                                        ${wdl.payment_method === 'bank_transfer' ? `
+                                                            <div class="small">
+                                                                <div>${wdl.bank_details?.bank_name || 'N/A'}</div>
+                                                                <div>${wdl.bank_details?.account_number || 'N/A'}</div>
+                                                                <div>${wdl.bank_details?.account_name || 'N/A'}</div>
+                                                            </div>
+                                                        ` : wdl.payment_method === 'crypto' ? `
+                                                            <div class="small">
+                                                                <div>Wallet: ${wdl.wallet_address?.substring(0, 20)}...</div>
+                                                            </div>
+                                                        ` : `
+                                                            <div class="small">
+                                                                <div>PayPal: ${wdl.paypal_email}</div>
+                                                            </div>
+                                                        `}
+                                                    </td>
+                                                    <td>
+                                                        <code>${wdl.reference}</code>
+                                                    </td>
+                                                    <td>
+                                                        ${UIComponents.formatDate(wdl.createdAt)}
+                                                        <br>
+                                                        <small class="text-muted">${wdl.days_pending} days pending</small>
+                                                    </td>
+                                                    <td>
+                                                        <div class="d-flex gap-1">
+                                                            <button class="btn btn-sm btn-approve action-btn" data-id="${wdl._id}" data-type="withdrawal">
+                                                                <i class="bi bi-check"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-reject action-btn" data-id="${wdl._id}" data-type="withdrawal">
+                                                                <i class="bi bi-x"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${data.data.count === 0 ? `
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="text-center py-5">
+                                    <i class="bi bi-check-circle text-success fs-1"></i>
+                                    <h5 class="mt-3">No pending withdrawals</h5>
+                                    <p class="text-muted">All withdrawals have been processed</p>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+                
+                document.getElementById('contentContainer').innerHTML = html;
+                
+                // Initialize DataTable
+                $('#withdrawalsTable').DataTable({
+                    pageLength: 25,
+                    order: [[5, 'desc']]
+                });
+                
+                // Add event listeners
+                document.getElementById('refreshWithdrawals').addEventListener('click', () => this.loadWithdrawals());
+                
+                document.querySelectorAll('.btn-approve[data-type="withdrawal"]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = e.target.closest('button').dataset.id;
+                        this.showActionModal(id, 'withdrawal', 'approve');
+                    });
+                });
+                
+                document.querySelectorAll('.btn-reject[data-type="withdrawal"]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = e.target.closest('button').dataset.id;
+                        this.showActionModal(id, 'withdrawal', 'reject');
+                    });
+                });
+            }
+
+            showActionModal(id, type, action) {
+                state.currentItemId = id;
+                state.currentItemType = type;
+                state.currentAction = action;
+                
+                const modal = new bootstrap.Modal(document.getElementById('actionModal'));
+                const modalTitle = document.getElementById('actionModalTitle');
+                
+                // Reset fields
+                document.getElementById('remarks').value = '';
+                document.getElementById('transactionId').value = '';
+                document.getElementById('paymentProof').value = '';
+                
+                // Show/hide additional fields based on type and action
+                const transactionIdField = document.getElementById('transactionIdField');
+                const paymentProofField = document.getElementById('paymentProofField');
+                
+                if (type === 'withdrawal' && action === 'approve') {
+                    transactionIdField.style.display = 'block';
+                    paymentProofField.style.display = 'block';
+                    modalTitle.textContent = 'Approve Withdrawal';
+                } else {
+                    transactionIdField.style.display = 'none';
+                    paymentProofField.style.display = 'none';
+                    modalTitle.textContent = `${action === 'approve' ? 'Approve' : 'Reject'} ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+                }
+                
+                modal.show();
+            }
+
+            async handleApprove() {
+                const remarks = document.getElementById('remarks').value;
+                
+                if (state.currentItemType === 'withdrawal') {
+                    const transactionId = document.getElementById('transactionId').value;
+                    const paymentProof = document.getElementById('paymentProof').value;
+                    
+                    const result = await this.api.approveWithdrawal(
+                        state.currentItemId, 
+                        remarks, 
+                        transactionId, 
+                        paymentProof
+                    );
+                    
+                    if (result) {
+                        UIComponents.showAlert('Success', 'Withdrawal approved successfully', 'success');
+                        this.loadWithdrawals();
+                        this.loadPendingCounts();
+                    }
+                } else if (state.currentItemType === 'investment') {
+                    const result = await this.api.approveInvestment(state.currentItemId, remarks);
+                    
+                    if (result) {
+                        UIComponents.showAlert('Success', 'Investment approved successfully', 'success');
+                        this.loadInvestments();
+                        this.loadPendingCounts();
+                    }
+                } else if (state.currentItemType === 'deposit') {
+                    const result = await this.api.approveDeposit(state.currentItemId, remarks);
+                    
+                    if (result) {
+                        UIComponents.showAlert('Success', 'Deposit approved successfully', 'success');
+                        this.loadDeposits();
+                        this.loadPendingCounts();
+                    }
+                }
+                
+                bootstrap.Modal.getInstance(document.getElementById('actionModal')).hide();
+            }
+
+            async handleReject() {
+                const remarks = document.getElementById('remarks').value;
+                
+                if (!remarks.trim()) {
+                    alert('Please enter rejection remarks');
+                    return;
+                }
+                
+                if (state.currentItemType === 'investment') {
+                    const result = await this.api.rejectInvestment(state.currentItemId, remarks);
+                    
+                    if (result) {
+                        UIComponents.showAlert('Success', 'Investment rejected successfully', 'success');
+                        this.loadInvestments();
+                        this.loadPendingCounts();
+                    }
+                } else if (state.currentItemType === 'deposit') {
+                    const result = await this.api.rejectDeposit(state.currentItemId, remarks);
+                    
+                    if (result) {
+                        UIComponents.showAlert('Success', 'Deposit rejected successfully', 'success');
+                        this.loadDeposits();
+                        this.loadPendingCounts();
+                    }
+                } else if (state.currentItemType === 'withdrawal') {
+                    const result = await this.api.rejectWithdrawal(state.currentItemId, remarks);
+                    
+                    if (result) {
+                        UIComponents.showAlert('Success', 'Withdrawal rejected successfully', 'success');
+                        this.loadWithdrawals();
+                        this.loadPendingCounts();
+                    }
+                }
+                
+                bootstrap.Modal.getInstance(document.getElementById('actionModal')).hide();
+            }
+
+            async loadTransactions() {
+                const data = await this.api.getTransactions();
+                if (!data) return;
+
+                const html = `
+                    <div class="row fade-in">
+                        <div class="col-12 mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 class="mb-0">Transactions</h4>
+                                    <p class="text-muted">View all platform transactions</p>
+                                </div>
+                                <button class="btn btn-primary" id="refreshTransactions">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h6 class="card-title">Total Income</h6>
+                                    <h3 class="mb-0">${UIComponents.formatCurrency(data.data.summary.income)}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body">
+                                    <h6 class="card-title">Total Expenses</h6>
+                                    <h3 class="mb-0">${UIComponents.formatCurrency(data.data.summary.expenses)}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h6 class="card-title">Net Flow</h6>
+                                    <h3 class="mb-0">${UIComponents.formatCurrency(data.data.summary.net_flow)}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <h6 class="card-title">Total Transactions</h6>
+                                    <h3 class="mb-0">${data.data.summary.total_transactions}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="data-table-container">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="transactionsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>User</th>
+                                                <th>Type</th>
+                                                <th>Amount</th>
+                                                <th>Description</th>
+                                                <th>Reference</th>
+                                                <th>Proof</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${data.data.transactions.map(txn => `
+                                                <tr>
+                                                    <td>${UIComponents.formatDate(txn.createdAt)}</td>
+                                                    <td>
+                                                        <div class="fw-bold">${txn.user_name}</div>
+                                                        <small class="text-muted">${txn.user_email}</small>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge ${txn.type_color}">${txn.type}</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="${txn.amount > 0 ? 'text-success' : 'text-danger'}">
+                                                            ${txn.formatted_amount}
+                                                        </span>
+                                                    </td>
+                                                    <td>${txn.description}</td>
+                                                    <td>
+                                                        <code>${txn.reference}</code>
+                                                    </td>
+                                                    <td>
+                                                        ${txn.has_proof ? `
+                                                            <button class="btn btn-sm btn-outline-primary" onclick="window.open('${txn.proof_url}', '_blank')">
+                                                                <i class="bi bi-eye"></i>
+                                                            </button>
+                                                        ` : '<span class="text-muted">None</span>'}
+                                                    </td>
+                                                    <td>${UIComponents.getStatusBadge(txn.status)}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('contentContainer').innerHTML = html;
+                
+                // Initialize DataTable
+                $('#transactionsTable').DataTable({
+                    pageLength: 50,
+                    order: [[0, 'desc']]
+                });
+                
+                document.getElementById('refreshTransactions').addEventListener('click', () => this.loadTransactions());
+            }
+
+            async loadKYC() {
+                const data = await this.api.getPendingKYC();
+                if (!data) return;
+
+                const html = `
+                    <div class="row fade-in">
+                        <div class="col-12 mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 class="mb-0">KYC Verification</h4>
+                                    <p class="text-muted">Verify user identity documents</p>
+                                </div>
+                                <button class="btn btn-primary" id="refreshKYC">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        ${data.data.kyc_submissions.map(kyc => `
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <div>
+                                                <h6 class="card-title mb-1">${kyc.user_name}</h6>
+                                                <p class="text-muted small mb-0">${kyc.user_email}</p>
+                                                <p class="text-muted small">ID: ${kyc.id_type} - ${kyc.id_number}</p>
+                                            </div>
+                                            <span class="badge bg-warning">${kyc.days_pending} days</span>
+                                        </div>
+                                        
+                                        <div class="row g-2 mb-3">
+                                            ${kyc.has_id_front ? `
+                                                <div class="col-6">
+                                                    <img src="${kyc.images.id_front}" alt="ID Front" class="image-preview w-100">
+                                                    <small class="text-muted">ID Front</small>
+                                                </div>
+                                            ` : ''}
+                                            ${kyc.has_selfie ? `
+                                                <div class="col-6">
+                                                    <img src="${kyc.images.selfie}" alt="Selfie" class="image-preview w-100">
+                                                    <small class="text-muted">Selfie with ID</small>
+                                                </div>
+                                            ` : ''}
+                                            ${kyc.has_id_back ? `
+                                                <div class="col-6">
+                                                    <img src="${kyc.images.id_back}" alt="ID Back" class="image-preview w-100">
+                                                    <small class="text-muted">ID Back</small>
+                                                </div>
+                                            ` : ''}
+                                            ${kyc.has_address_proof ? `
+                                                <div class="col-6">
+                                                    <img src="${kyc.images.address_proof}" alt="Address Proof" class="image-preview w-100">
+                                                    <small class="text-muted">Address Proof</small>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                        
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-success btn-sm flex-fill" data-id="${kyc._id}" data-type="kyc" data-action="approve">
+                                                <i class="bi bi-check"></i> Approve
+                                            </button>
+                                            <button class="btn btn-danger btn-sm flex-fill" data-id="${kyc._id}" data-type="kyc" data-action="reject">
+                                                <i class="bi bi-x"></i> Reject
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    ${data.data.count === 0 ? `
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="text-center py-5">
+                                    <i class="bi bi-check-circle text-success fs-1"></i>
+                                    <h5 class="mt-3">No pending KYC submissions</h5>
+                                    <p class="text-muted">All KYC documents have been verified</p>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+                
+                document.getElementById('contentContainer').innerHTML = html;
+                
+                document.getElementById('refreshKYC').addEventListener('click', () => this.loadKYC());
+                
+                document.querySelectorAll('button[data-type="kyc"]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = e.target.closest('button').dataset.id;
+                        const action = e.target.closest('button').dataset.action;
+                        this.showKYCActionModal(id, action);
+                    });
+                });
+            }
+
+            showKYCActionModal(id, action) {
+                state.currentItemId = id;
+                state.currentAction = action;
+                
+                if (action === 'approve') {
+                    const html = `
+                        <div class="mb-3">
+                            <label class="form-label">Approval Remarks (Optional)</label>
+                            <textarea class="form-control" id="kycRemarks" rows="3" placeholder="Enter remarks..."></textarea>
+                        </div>
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle"></i>
+                            Approving KYC will grant the user full platform access.
+                        </div>
+                    `;
+                    
+                    document.getElementById('userDetailContent').innerHTML = html;
+                    const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
+                    modal.show();
+                    
+                    document.querySelector('#userDetailModal .modal-title').textContent = 'Approve KYC';
+                    const modalFooter = document.querySelector('#userDetailModal .modal-footer');
+                    modalFooter.innerHTML = `
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-success" id="approveKYC">Approve</button>
+                    `;
+                    
+                    document.getElementById('approveKYC').addEventListener('click', async () => {
+                        const remarks = document.getElementById('kycRemarks').value;
+                        const result = await this.api.approveKYC(id, remarks);
+                        
+                        if (result) {
+                            UIComponents.showAlert('Success', 'KYC approved successfully', 'success');
+                            modal.hide();
+                            this.loadKYC();
+                            this.loadPendingCounts();
+                        }
+                    });
+                } else {
+                    const html = `
+                        <div class="mb-3">
+                            <label class="form-label">Rejection Reason</label>
+                            <textarea class="form-control" id="kycRejectionReason" rows="3" placeholder="Enter rejection reason..." required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Additional Remarks (Optional)</label>
+                            <textarea class="form-control" id="kycRemarks" rows="2" placeholder="Enter remarks..."></textarea>
+                        </div>
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            The user will need to submit new documents for verification.
+                        </div>
+                    `;
+                    
+                    document.getElementById('userDetailContent').innerHTML = html;
+                    const modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
+                    modal.show();
+                    
+                    document.querySelector('#userDetailModal .modal-title').textContent = 'Reject KYC';
+                    const modalFooter = document.querySelector('#userDetailModal .modal-footer');
+                    modalFooter.innerHTML = `
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="rejectKYC">Reject</button>
+                    `;
+                    
+                    document.getElementById('rejectKYC').addEventListener('click', async () => {
+                        const rejectionReason = document.getElementById('kycRejectionReason').value;
+                        const remarks = document.getElementById('kycRemarks').value;
+                        
+                        if (!rejectionReason.trim()) {
+                            alert('Please enter rejection reason');
+                            return;
+                        }
+                        
+                        const result = await this.api.rejectKYC(id, rejectionReason, remarks);
+                        
+                        if (result) {
+                            UIComponents.showAlert('Success', 'KYC rejected successfully', 'success');
+                            modal.hide();
+                            this.loadKYC();
+                            this.loadPendingCounts();
+                        }
+                    });
+                }
+            }
+
+            async loadSupportTickets() {
+                const data = await this.api.getSupportTickets();
+                if (!data) return;
+
+                const html = `
+                    <div class="row fade-in">
+                        <div class="col-12 mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 class="mb-0">Support Tickets</h4>
+                                    <p class="text-muted">Manage user support requests</p>
+                                </div>
+                                <button class="btn btn-primary" id="refreshTickets">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="data-table-container">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="ticketsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Ticket ID</th>
+                                                <th>User</th>
+                                                <th>Subject</th>
+                                                <th>Category</th>
+                                                <th>Priority</th>
+                                                <th>Status</th>
+                                                <th>Created</th>
+                                                <th>Attachments</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${data.data.tickets.map(ticket => `
+                                                <tr>
+                                                    <td>
+                                                        <code>${ticket.ticket_id}</code>
+                                                    </td>
+                                                    <td>${ticket.user?.full_name || 'N/A'}</td>
+                                                    <td>${ticket.subject}</td>
+                                                    <td>
+                                                        <span class="badge bg-info">${ticket.category}</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge ${ticket.priority_color}">${ticket.priority}</span>
+                                                    </td>
+                                                    <td>
+                                                        ${UIComponents.getStatusBadge(ticket.status)}
+                                                    </td>
+                                                    <td>
+                                                        ${UIComponents.formatDate(ticket.createdAt)}
+                                                        <br>
+                                                        <small class="text-muted">${ticket.days_open} days</small>
+                                                    </td>
+                                                    <td>
+                                                        ${ticket.has_attachments ? `
+                                                            <span class="badge bg-secondary">${ticket.attachments_count}</span>
+                                                        ` : '<span class="text-muted">None</span>'}
+                                                    </td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-view action-btn" data-ticket-id="${ticket._id}">
+                                                            <i class="bi bi-eye"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('contentContainer').innerHTML = html;
+                
+                // Initialize DataTable
+                $('#ticketsTable').DataTable({
+                    pageLength: 25,
+                    order: [[6, 'desc']]
+                });
+                
+                document.getElementById('refreshTickets').addEventListener('click', () => this.loadSupportTickets());
+                
+                // Add event listeners for ticket view buttons
+                document.querySelectorAll('button[data-ticket-id]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const ticketId = e.target.closest('button').dataset.ticketId;
+                        this.showTicketDetails(ticketId);
+                    });
+                });
+            }
+
+            showTicketDetails(ticketId) {
+                // This would show ticket details in a modal
+                // For now, just show an alert
+                alert(`View ticket details for ID: ${ticketId}`);
+            }
+
+            async loadInvestmentPlans() {
+                const data = await this.api.getInvestmentPlans();
+                if (!data) return;
+
+                const html = `
+                    <div class="row fade-in">
+                        <div class="col-12 mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 class="mb-0">Investment Plans</h4>
+                                    <p class="text-muted">Manage investment plans and configurations</p>
+                                </div>
+                                <button class="btn btn-primary">
+                                    <i class="bi bi-plus"></i> Add New Plan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        ${data.data.plans.map(plan => `
+                            <div class="col-md-6 col-lg-4 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <div>
+                                                <h5 class="card-title mb-1">${plan.name}</h5>
+                                                <p class="text-muted small mb-0">${plan.raw_material}</p>
+                                            </div>
+                                            <span class="badge ${plan.risk_level === 'low' ? 'bg-success' : plan.risk_level === 'medium' ? 'bg-warning' : 'bg-danger'}">
+                                                ${plan.risk_level}
+                                            </span>
+                                        </div>
+                                        
+                                        <p class="card-text text-muted small mb-3">${plan.description}</p>
+                                        
+                                        <div class="row g-2 mb-3">
+                                            <div class="col-6">
+                                                <div class="border rounded p-2 text-center">
+                                                    <div class="text-primary fw-bold">${plan.daily_interest}%</div>
+                                                    <small class="text-muted">Daily</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="border rounded p-2 text-center">
+                                                    <div class="text-success fw-bold">${plan.total_interest}%</div>
+                                                    <small class="text-muted">Total</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="border rounded p-2 text-center">
+                                                    <div class="fw-bold">${plan.duration} days</div>
+                                                    <small class="text-muted">Duration</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="border rounded p-2 text-center">
+                                                    <div class="fw-bold">${UIComponents.formatCurrency(plan.min_amount)}</div>
+                                                    <small class="text-muted">Min Amount</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-outline-primary btn-sm flex-fill">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </button>
+                                            <button class="btn btn-outline-danger btn-sm flex-fill">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                document.getElementById('contentContainer').innerHTML = html;
+            }
+
+            async loadAllNotifications() {
+                const data = await this.api.getNotifications();
+                if (!data) return;
+
+                state.notifications = data.data.notifications;
+                
+                const html = `
+                    <div class="row fade-in">
+                        <div class="col-12 mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 class="mb-0">Notifications</h4>
+                                    <p class="text-muted">View and manage system notifications</p>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-primary" id="markAllRead">
+                                        <i class="bi bi-check-all"></i> Mark All Read
+                                    </button>
+                                    <button class="btn btn-outline-secondary" id="refreshNotifications">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="data-table-container">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="notificationsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Title</th>
+                                                <th>Message</th>
+                                                <th>Type</th>
+                                                <th>Date</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${state.notifications.map(notif => `
+                                                <tr class="${notif.is_read ? '' : 'table-active'}">
+                                                    <td>${notif.title}</td>
+                                                    <td>${notif.message}</td>
+                                                    <td>
+                                                        <span class="badge bg-${notif.type_color}">${notif.type}</span>
+                                                    </td>
+                                                    <td>
+                                                        ${notif.date_formatted}
+                                                        <br>
+                                                        <small class="text-muted">${notif.time_ago}</small>
+                                                    </td>
+                                                    <td>
+                                                        ${notif.is_read ? 
+                                                            '<span class="badge bg-success">Read</span>' : 
+                                                            '<span class="badge bg-warning">Unread</span>'
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        <div class="d-flex gap-1">
+                                                            ${!notif.is_read ? `
+                                                                <button class="btn btn-sm btn-success action-btn" data-notification-id="${notif._id}">
+                                                                    <i class="bi bi-check"></i>
+                                                                </button>
+                                                            ` : ''}
+                                                            ${notif.has_action ? `
+                                                                <button class="btn btn-sm btn-primary action-btn" onclick="window.open('${notif.action_url}', '_blank')">
+                                                                    <i class="bi bi-link"></i>
+                                                                </button>
+                                                            ` : ''}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('contentContainer').innerHTML = html;
+                
+                // Initialize DataTable
+                $('#notificationsTable').DataTable({
+                    pageLength: 25,
+                    order: [[3, 'desc']]
+                });
+                
+                document.getElementById('refreshNotifications').addEventListener('click', () => this.loadAllNotifications());
+                document.getElementById('markAllRead').addEventListener('click', () => this.markAllNotificationsRead());
+                
+                document.querySelectorAll('button[data-notification-id]').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const notificationId = e.target.closest('button').dataset.notificationId;
+                        const result = await this.api.markNotificationAsRead(notificationId);
+                        if (result) {
+                            this.loadAllNotifications();
+                            this.loadNotifications();
+                        }
+                    });
+                });
+            }
+
+            async markAllNotificationsRead() {
+                // This would call an API endpoint to mark all as read
+                // For now, just reload
+                this.loadAllNotifications();
+                this.loadNotifications();
+            }
+
+            async loadSettings() {
+                const html = `
+                    <div class="row fade-in">
+                        <div class="col-12 mb-4">
+                            <h4 class="mb-0">Settings</h4>
+                            <p class="text-muted">Configure platform settings</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title mb-3">Platform Settings</h6>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Platform Name</label>
+                                        <input type="text" class="form-control" value="Raw Wealthy">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Minimum Investment</label>
+                                        <input type="number" class="form-control" value="3500">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Minimum Deposit</label>
+                                        <input type="number" class="form-control" value="3500">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Minimum Withdrawal</label>
+                                        <input type="number" class="form-control" value="3500">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Platform Fee (%)</label>
+                                        <input type="number" class="form-control" value="10">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Referral Commission (%)</label>
+                                        <input type="number" class="form-control" value="10">
+                                    </div>
+                                    
+                                    <button class="btn btn-primary">Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title mb-3">Email Settings</h6>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">SMTP Host</label>
+                                        <input type="text" class="form-control" placeholder="smtp.gmail.com">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">SMTP Port</label>
+                                        <input type="number" class="form-control" placeholder="587">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Email Address</label>
+                                        <input type="email" class="form-control" placeholder="noreply@rawwealthy.com">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Email Password</label>
+                                        <input type="password" class="form-control" placeholder="********">
+                                    </div>
+                                    
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" checked>
+                                        <label class="form-check-label">Enable email notifications</label>
+                                    </div>
+                                    
+                                    <button class="btn btn-primary">Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title mb-3">Danger Zone</h6>
+                                    
+                                    <div class="alert alert-danger">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <strong>Warning:</strong> These actions are irreversible. Please proceed with caution.
+                                    </div>
+                                    
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-outline-danger">
+                                            <i class="bi bi-database"></i> Clear Test Data
+                                        </button>
+                                        <button class="btn btn-outline-danger">
+                                            <i class="bi bi-arrow-clockwise"></i> Reset Platform
+                                        </button>
+                                        <button class="btn btn-danger">
+                                            <i class="bi bi-trash"></i> Delete All Data
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('contentContainer').innerHTML = html;
+            }
+
+            async loadReports() {
+                const html = `
+                    <div class="row fade-in">
+                        <div class="col-12 mb-4">
+                            <h4 class="mb-0">Reports</h4>
+                            <p class="text-muted">Generate and view platform reports</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-file-earmark-text fs-1 text-primary mb-3"></i>
+                                    <h5>Daily Report</h5>
+                                    <p class="text-muted small">Generate daily activity report</p>
+                                    <button class="btn btn-outline-primary">Generate</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-calendar-week fs-1 text-success mb-3"></i>
+                                    <h5>Weekly Report</h5>
+                                    <p class="text-muted small">Generate weekly performance report</p>
+                                    <button class="btn btn-outline-success">Generate</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-calendar-month fs-1 text-warning mb-3"></i>
+                                    <h5>Monthly Report</h5>
+                                    <p class="text-muted small">Generate monthly financial report</p>
+                                    <button class="btn btn-outline-warning">Generate</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <i class="bi bi-graph-up fs-1 text-danger mb-3"></i>
+                                    <h5>Custom Report</h5>
+                                    <p class="text-muted small">Generate custom period report</p>
+                                    <button class="btn btn-outline-danger">Generate</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="data-table-container">
+                                <h6 class="mb-3">Recent Reports</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Report ID</th>
+                                                <th>Type</th>
+                                                <th>Period</th>
+                                                <th>Generated By</th>
+                                                <th>Date</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>REP-20231215-001</td>
+                                                <td><span class="badge bg-primary">Daily</span></td>
+                                                <td>Dec 15, 2023</td>
+                                                <td>Admin User</td>
+                                                <td>Dec 15, 2023 09:00</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary">
+                                                        <i class="bi bi-download"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-secondary">
+                                                        <i class="bi bi-eye"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>REP-20231214-001</td>
+                                                <td><span class="badge bg-success">Weekly</span></td>
+                                                <td>Dec 8-14, 2023</td>
+                                                <td>Admin User</td>
+                                                <td>Dec 14, 2023 09:00</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary">
+                                                        <i class="bi bi-download"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-secondary">
+                                                        <i class="bi bi-eye"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>REP-20231130-001</td>
+                                                <td><span class="badge bg-warning">Monthly</span></td>
+                                                <td>Nov 1-30, 2023</td>
+                                                <td>Admin User</td>
+                                                <td>Nov 30, 2023 09:00</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary">
+                                                        <i class="bi bi-download"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-secondary">
+                                                        <i class="bi bi-eye"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('contentContainer').innerHTML = html;
+            }
+
+            async loadProfile() {
+                const html = `
+                    <div class="row fade-in">
+                        <div class="col-12 mb-4">
+                            <h4 class="mb-0">Admin Profile</h4>
+                            <p class="text-muted">Manage your admin account</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card mb-4">
+                                <div class="card-body text-center">
+                                    <div class="avatar mb-3">
+                                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 100px; height: 100px;">
+                                            <i class="bi bi-person text-white fs-1"></i>
+                                        </div>
+                                    </div>
+                                    <h5 class="card-title">${state.adminUser?.full_name || 'Admin User'}</h5>
+                                    <p class="text-muted">${state.adminUser?.email || 'admin@rawwealthy.com'}</p>
+                                    <p class="text-muted">Super Admin</p>
+                                    
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button class="btn btn-primary btn-sm">
+                                            <i class="bi bi-camera"></i>
+                                        </button>
+                                        <button class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title mb-3">Account Security</h6>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Current Password</label>
+                                        <input type="password" class="form-control" placeholder="Enter current password">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">New Password</label>
+                                        <input type="password" class="form-control" placeholder="Enter new password">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Confirm New Password</label>
+                                        <input type="password" class="form-control" placeholder="Confirm new password">
+                                    </div>
+                                    
+                                    <button class="btn btn-danger w-100">Change Password</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <h6 class="card-title mb-3">Personal Information</h6>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Full Name</label>
+                                            <input type="text" class="form-control" value="${state.adminUser?.full_name || 'Admin User'}">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Email Address</label>
+                                            <input type="email" class="form-control" value="${state.adminUser?.email || 'admin@rawwealthy.com'}">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Phone Number</label>
+                                            <input type="text" class="form-control" value="${state.adminUser?.phone || '+234 916 180 6424'}">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Country</label>
+                                            <select class="form-select">
+                                                <option>Nigeria</option>
+                                                <option>United States</option>
+                                                <option>United Kingdom</option>
+                                                <option>Canada</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <button class="btn btn-primary">Save Changes</button>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title mb-3">Activity Log</h6>
+                                    
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Time</th>
+                                                    <th>Activity</th>
+                                                    <th>IP Address</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Today, 09:30</td>
+                                                    <td>Logged in</td>
+                                                    <td>192.168.1.1</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Today, 09:45</td>
+                                                    <td>Approved deposit #DEP123456</td>
+                                                    <td>192.168.1.1</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Today, 10:15</td>
+                                                    <td>Viewed user profile</td>
+                                                    <td>192.168.1.1</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Yesterday, 14:30</td>
+                                                    <td>Rejected KYC submission</td>
+                                                    <td>192.168.1.1</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Dec 13, 2023</td>
+                                                    <td>Updated platform settings</td>
+                                                    <td>192.168.1.1</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('contentContainer').innerHTML = html;
+            }
+
+            async loadPendingCounts() {
+                try {
+                    const [investments, deposits, withdrawals, kyc] = await Promise.all([
+                        this.api.getPendingInvestments(),
+                        this.api.getPendingDeposits(),
+                        this.api.getPendingWithdrawals(),
+                        this.api.getPendingKYC()
+                    ]);
+                    
+                    if (investments) state.pendingCounts.investments = investments.data.count;
+                    if (deposits) state.pendingCounts.deposits = deposits.data.count;
+                    if (withdrawals) state.pendingCounts.withdrawals = withdrawals.data.count;
+                    if (kyc) state.pendingCounts.kyc = kyc.data.count;
+                    
+                    this.updatePendingBadges();
+                } catch (error) {
+                    console.error('Error loading pending counts:', error);
+                }
+            }
+
+            updatePendingBadges() {
+                // Update notification badges
+                const totalPending = state.pendingCounts.investments + 
+                                   state.pendingCounts.deposits + 
+                                   state.pendingCounts.withdrawals + 
+                                   state.pendingCounts.kyc;
+                
+                document.getElementById('notificationCount').textContent = totalPending;
+                document.getElementById('kycBadge').textContent = state.pendingCounts.kyc;
+                
+                // Update support badge (would need API call for pending support tickets)
+                // For now, set to 0
+                document.getElementById('supportBadge').textContent = '0';
+            }
+
+            async loadNotifications() {
+                try {
+                    const data = await this.api.getNotifications();
+                    if (!data) return;
+                    
+                    state.notifications = data.data.notifications.slice(0, 5); // Get latest 5
+                    
+                    const unreadCount = state.notifications.filter(n => !n.is_read).length;
+                    document.getElementById('notificationCount').textContent = unreadCount;
+                    
+                    // Update notification dropdown
+                    const notificationList = document.getElementById('notificationList');
+                    notificationList.innerHTML = state.notifications.map(notif => `
+                        <a href="#" class="dropdown-item p-3 border-bottom ${!notif.is_read ? 'bg-light' : ''}">
+                            <div class="d-flex align-items-start">
+                                <div class="me-3">
+                                    <i class="bi bi-${this.getNotificationIcon(notif.type)} text-${notif.type_color}"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold">${notif.title}</div>
+                                    <div class="small text-muted">${notif.message.substring(0, 50)}...</div>
+                                    <div class="small text-muted">${notif.time_ago}</div>
+                                </div>
+                            </div>
+                        </a>
+                    `).join('');
+                    
+                    if (state.notifications.length === 0) {
+                        notificationList.innerHTML = `
+                            <div class="p-3 text-center text-muted">
+                                <i class="bi bi-bell-slash fs-1"></i>
+                                <p class="mb-0">No notifications</p>
+                            </div>
+                        `;
+                    }
+                    
+                } catch (error) {
+                    console.error('Error loading notifications:', error);
+                }
+            }
+
+            getNotificationIcon(type) {
+                const icons = {
+                    'info': 'info-circle',
+                    'success': 'check-circle',
+                    'warning': 'exclamation-triangle',
+                    'error': 'x-circle',
+                    'investment': 'graph-up',
+                    'withdrawal': 'wallet2',
+                    'deposit': 'cash-coin',
+                    'kyc': 'shield-check',
+                    'referral': 'people',
+                    'system': 'gear'
+                };
+                return icons[type] || 'bell';
+            }
+
+            updateAdminInfo() {
+                if (state.adminUser) {
+                    document.getElementById('adminName').textContent = state.adminUser.full_name;
+                    document.getElementById('adminNameShort').textContent = state.adminUser.full_name.split(' ')[0];
+                }
+            }
+        }
+
+        // Initialize Application
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check authentication
+            const auth = new AuthManager();
+            
+            if (!auth.isAuthenticated()) {
+                // Redirect to login page
+                window.location.href = '/admin/login.html';
+                return;
+            }
+            
+            // Initialize API service
+            const api = new ApiService(auth);
+            
+            // Initialize page manager
+            window.pageManager = new PageManager(api);
+            
+            // Auto-refresh pending counts every 60 seconds
+            setInterval(() => {
+                window.pageManager.loadPendingCounts();
+                window.pageManager.loadNotifications();
+            }, 60000);
+        });
+
+        // Global function to show image preview
+        window.previewImage = function(src) {
+            document.getElementById('previewImage').src = src;
+            new bootstrap.Modal(document.getElementById('imagePreviewModal')).show();
+        };
+    </script>
+</body>
+</html>
